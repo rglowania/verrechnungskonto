@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verzinsung Verrechnungskonto</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════════════════════════════
+   G-DESIGN — Template v1.1
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Tokens ─────────────────────────────────────────────────── */
+:root,[data-theme="dark"]{
+  --bg:        #0c1410;
+  --surface:   #13201a;
+  --surface2:  #192b22;
+  --border:    #213328;
+  --accent:    #5d9e7a;
+  --accent-lt: #89c4a2;
+  --accent-dim:rgba(93,158,122,0.13);
+  --text:      #ddeee5;
+  --text-muted:#6e9480;
+}
+[data-theme="light"]{
+  --bg:        #f0f7f3;
+  --surface:   #ffffff;
+  --surface2:  #e6f2eb;
+  --border:    #bdd8c8;
+  --accent:    #2e7a50;
+  --accent-lt: #1e5c3a;
+  --accent-dim:rgba(46,122,80,0.10);
+  --text:      #0f1f16;
+  --text-muted:#4d7a5e;
+}
+@media(prefers-color-scheme:light){
+  :root:not([data-theme]){
+    --bg:#f0f7f3;--surface:#ffffff;--surface2:#e6f2eb;--border:#bdd8c8;
+    --accent:#2e7a50;--accent-lt:#1e5c3a;--accent-dim:rgba(46,122,80,0.10);
+    --text:#0f1f16;--text-muted:#4d7a5e;
+  }
+}
+
+/* ── Reset ──────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;}
+
+/* ── Body & Hintergrund-Grid ────────────────────────────────── */
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'IBM Plex Sans',sans-serif;font-weight:300;
+  min-height:100vh;padding:40px 20px 80px;
+  transition:background .25s,color .25s;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(93,158,122,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(93,158,122,0.04) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+
+/* ── Layout ─────────────────────────────────────────────────── */
+.container{max-width:960px;margin:0 auto;position:relative;z-index:1;}
+
+/* ── Theme-Toggle ───────────────────────────────────────────── */
+.theme-toggle{
+  position:fixed;top:18px;right:20px;display:flex;gap:3px;
+  z-index:1000;background:var(--surface);border:1px solid var(--border);padding:4px;
+}
+.theme-btn{
+  width:28px;height:28px;background:transparent;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-muted);transition:all .2s;padding:0;
+}
+.theme-btn:hover{color:var(--accent);}
+.theme-btn.active{color:var(--accent);background:var(--accent-dim);}
+.theme-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── Typografie ─────────────────────────────────────────────── */
+h1{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(26px,5vw,44px);font-weight:600;
+  line-height:1.15;color:var(--text);margin-bottom:10px;
+}
+h1 span{color:var(--accent);}
+h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(18px,3vw,26px);font-weight:600;
+  color:var(--text);margin-bottom:8px;
+}
+.subtitle{
+  font-size:12px;color:var(--text-muted);
+  font-family:'IBM Plex Mono',monospace;letter-spacing:0.5px;
+}
+.badge{
+  display:inline-block;font-family:'IBM Plex Mono',monospace;
+  font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--accent);border:1px solid var(--accent-dim);padding:4px 14px;margin-bottom:18px;
+}
+.card-title{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:18px;
+}
+.hint{font-size:10px;color:var(--text-muted);margin-top:5px;font-family:'IBM Plex Mono',monospace;line-height:1.5;}
+.hint b{color:var(--accent-lt);}
+.note{font-size:10px;color:var(--text-muted);margin-top:14px;line-height:1.7;font-family:'IBM Plex Mono',monospace;}
+
+/* ── Disclaimer ─────────────────────────────────────────────── */
+.disclaimer{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;
+  color:var(--text-muted);line-height:1.7;opacity:.7;
+  margin-top:32px;
+}
+
+/* ── Footer ─────────────────────────────────────────────────── */
+footer{
+  text-align:center;padding:32px 0 0;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:1px;color:var(--text-muted);opacity:.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   APP-SPEZIFISCHES CSS
+   ═══════════════════════════════════════════════════════════════ */
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:3px solid var(--accent);
+  padding:28px 32px;
+  margin-bottom:20px;
+}
+
+.field-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text-muted);display:block;margin-bottom:6px;
+}
+
+input[type="number"],input[type="text"],select{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:14px;
+  padding:10px 14px;
+  outline:none;
+  transition:border-color .2s;
+  -moz-appearance:textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--accent);}
+
+select{cursor:pointer;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+
+.btn{
+  width:100%;padding:14px;
+  background:var(--accent);color:#fff;border:none;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;
+  letter-spacing:3px;text-transform:uppercase;cursor:pointer;
+  transition:opacity .2s;margin-top:8px;
+}
+.btn:hover{opacity:.85;}
+
+.result-box{
+  display:none;
+  background:var(--accent-dim);
+  border:1px solid var(--accent);
+  border-left:3px solid var(--accent);
+  padding:24px 28px;
+  margin-top:24px;
+}
+
+.result-main{
+  font-family:'Playfair Display',serif;
+  font-size:38px;color:var(--accent);
+  margin-bottom:4px;
+}
+
+.result-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:16px;
+  margin-top:20px;
+}
+
+.result-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  padding:14px 16px;
+}
+
+.result-item-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:6px;
+}
+
+.result-item-value{
+  font-family:'Playfair Display',serif;
+  font-size:20px;color:var(--text);
+}
+.result-item-value.accent{color:var(--accent);}
+
+/* Zinsperioden-Tabelle */
+.tbl-wrap{margin-top:24px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+thead tr{border-bottom:1px solid var(--accent);}
+th{
+  text-align:left;padding:8px 10px;
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);
+}
+td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-muted);}
+td.val{color:var(--text);font-weight:500;}
+td.pos{color:var(--accent);}
+td.neg{color:#c97070;}
+tbody tr:hover td{background:var(--accent-dim);}
+
+/* Modus-Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:24px;}
+.tab{
+  flex:1;padding:10px;
+  background:var(--surface2);border:1px solid var(--border);
+  font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--text-muted);cursor:pointer;text-align:center;
+  transition:all .2s;
+}
+.tab.active{
+  background:var(--accent-dim);border-color:var(--accent);color:var(--accent);
+}
+
+/* Toggle-Zeile für Zinseszins */
+.toggle-row{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:16px;
+}
+.toggle{
+  position:relative;width:38px;height:20px;flex-shrink:0;
+}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{
+  position:absolute;inset:0;background:var(--surface2);
+  border:1px solid var(--border);cursor:pointer;transition:.2s;
+}
+.toggle input:checked + .toggle-slider{background:var(--accent);border-color:var(--accent);}
+.toggle-slider::after{
+  content:'';position:absolute;width:12px;height:12px;
+  background:#fff;top:3px;left:3px;transition:.2s;
+}
+.toggle input:checked + .toggle-slider::after{left:21px;}
+.toggle-label{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);cursor:pointer;
+}
+
+@media(max-width:600px){
+  .grid2,.grid3{grid-template-columns:1fr;}
+  .result-main{font-size:28px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Theme-Toggle ──────────────────────────────────────────── -->
+<div class="theme-toggle">
+  <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')" title="Dunkel">
+    <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+  <button class="theme-btn" id="btn-system" onclick="setTheme('system')" title="System">
+    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+  </button>
+  <button class="theme-btn" id="btn-light" onclick="setTheme('light')" title="Hell">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  </button>
+</div>
+
+<div class="container">
+
+  <header style="text-align:center;margin-bottom:40px;">
+    <h1><span>Verzinsung</span> Verrechnungskonto</h1>
+    <p class="subtitle">Gesellschafter-Darlehen · Fremdvergleich · vGA-Prüfung</p>
+  </header>
+
+  <!-- Modus-Tabs -->
+  <div class="tabs">
+    <div class="tab active" id="tab-einfach" onclick="switchTab('einfach')">Einfache Berechnung</div>
+    <div class="tab" id="tab-perioden" onclick="switchTab('perioden')">Mehrere Perioden</div>
+    <div class="tab" id="tab-fremdvergleich" onclick="switchTab('fremdvergleich')">Fremdvergleich</div>
+  </div>
+
+  <!-- ══ TAB: EINFACH ══════════════════════════════════════════ -->
+  <div id="view-einfach">
+    <div class="card">
+      <div class="card-title">Kontostand & Verzinsung</div>
+      <div class="grid2" style="margin-bottom:16px;">
+        <label>
+          <span class="field-label">Saldo Verrechnungskonto (€)</span>
+          <input type="number" id="e-saldo" value="50000" step="1000" min="0">
+          <p class="hint">Positiv = Forderung der GmbH gegen Gesellschafter (Darlehen an GS)</p>
+        </label>
+        <label>
+          <span class="field-label">Zinssatz (% p.a.)</span>
+          <input type="number" id="e-zinssatz" value="5.0" step="0.1" min="0" max="100">
+          <p class="hint">Fremdüblicher Satz gem. Fremdvergleich</p>
+        </label>
+      </div>
+      <div class="grid3" style="margin-bottom:16px;">
+        <label>
+          <span class="field-label">Beginn</span>
+          <input type="date" id="e-von" value="">
+        </label>
+        <label>
+          <span class="field-label">Ende</span>
+          <input type="date" id="e-bis" value="">
+        </label>
+        <label>
+          <span class="field-label">Zinsmethode</span>
+          <select id="e-methode">
+            <option value="30E360">30E/360 (kaufmännisch)</option>
+            <option value="act360">act/360</option>
+            <option value="act365" selected>act/365</option>
+            <option value="actact">act/act</option>
+          </select>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle">
+          <input type="checkbox" id="e-zinseszins">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label" onclick="document.getElementById('e-zinseszins').click()">Zinseszins (jährliche Kapitalisierung)</span>
+      </div>
+      <button class="btn" onclick="calcEinfach()">Berechnen</button>
+    </div>
+
+    <div class="result-box" id="res-einfach">
+      <div class="card-title">Ergebnis</div>
+      <div class="result-main" id="res-e-zinsen">—</div>
+      <p class="hint" style="margin-bottom:0;">Zinsbetrag gesamt</p>
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="result-item-label">Laufzeit</div>
+          <div class="result-item-value" id="res-e-tage">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">Effektive Tage</div>
+          <div class="result-item-value" id="res-e-etage">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">Zinssatz p.a.</div>
+          <div class="result-item-value" id="res-e-rate">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">Endsaldo</div>
+          <div class="result-item-value accent" id="res-e-endsaldo">—</div>
+        </div>
+      </div>
+      <div class="note" id="res-e-hinweis"></div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: PERIODEN ════════════════════════════════════════ -->
+  <div id="view-perioden" style="display:none;">
+    <div class="card">
+      <div class="card-title">Jahresweise Kontoentwicklung</div>
+      <div class="grid2" style="margin-bottom:16px;">
+        <label>
+          <span class="field-label">Anfangssaldo (€)</span>
+          <input type="number" id="p-saldo" value="50000" step="1000">
+        </label>
+        <label>
+          <span class="field-label">Zinssatz (% p.a.)</span>
+          <input type="number" id="p-zinssatz" value="5.0" step="0.1" min="0">
+        </label>
+      </div>
+      <div class="grid2" style="margin-bottom:16px;">
+        <label>
+          <span class="field-label">Startjahr</span>
+          <input type="number" id="p-startjahr" value="2020" step="1" min="2000" max="2040">
+        </label>
+        <label>
+          <span class="field-label">Anzahl Jahre</span>
+          <input type="number" id="p-jahre" value="5" step="1" min="1" max="30">
+        </label>
+      </div>
+      <label style="display:block;margin-bottom:16px;">
+        <span class="field-label">Jährliche Entnahme / Einlage (€, negativ = Entnahme)</span>
+        <input type="number" id="p-aenderung" value="0" step="1000">
+        <p class="hint">Betrag der am Jahresanfang auf das Verrechnungskonto gebucht wird (+ = Einlage, − = Entnahme)</p>
+      </label>
+      <div class="toggle-row">
+        <label class="toggle">
+          <input type="checkbox" id="p-zinseszins" checked>
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label" onclick="document.getElementById('p-zinseszins').click()">Zinseszins (Zinsen werden dem Konto gutgeschrieben)</span>
+      </div>
+      <button class="btn" onclick="calcPerioden()">Berechnen</button>
+    </div>
+
+    <div class="result-box" id="res-perioden">
+      <div class="card-title">Periodenübersicht</div>
+      <div class="result-grid" style="margin-bottom:0;">
+        <div class="result-item">
+          <div class="result-item-label">Zinsen gesamt</div>
+          <div class="result-item-value accent" id="res-p-gesamt">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">Endsaldo</div>
+          <div class="result-item-value" id="res-p-ende">—</div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Jahr</th>
+              <th>Anfangssaldo</th>
+              <th>Änderung</th>
+              <th>Zinsbasis</th>
+              <th>Zinsen</th>
+              <th>Endsaldo</th>
+            </tr>
+          </thead>
+          <tbody id="res-p-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: FREMDVERGLEICH ══════════════════════════════════ -->
+  <div id="view-fremdvergleich" style="display:none;">
+    <div class="card">
+      <div class="card-title">Fremdvergleich & vGA-Prüfung</div>
+      <p class="hint" style="margin-bottom:20px;">Prüft, ob der vereinbarte Zinssatz einem Fremdvergleich standhält. Relevant für Darlehen der GmbH an den Gesellschafter (§ 8 Abs. 3 KStG).</p>
+      <div class="grid2" style="margin-bottom:16px;">
+        <label>
+          <span class="field-label">Saldo (€)</span>
+          <input type="number" id="f-saldo" value="100000" step="1000">
+        </label>
+        <label>
+          <span class="field-label">Vereinbarter Zinssatz (% p.a.)</span>
+          <input type="number" id="f-vereinbart" value="0" step="0.1" min="0">
+          <p class="hint">0 % = unverzinstes Darlehen</p>
+        </label>
+      </div>
+      <div class="grid3" style="margin-bottom:16px;">
+        <label>
+          <span class="field-label">Jahr der Prüfung</span>
+          <input type="number" id="f-jahr" value="2024" step="1" min="2010" max="2030">
+        </label>
+        <label>
+          <span class="field-label">Fremdvergleichssatz (% p.a.)</span>
+          <input type="number" id="f-fremd" value="5.0" step="0.1" min="0">
+          <p class="hint">Banküblicher Zinssatz für vergleichbares Darlehen</p>
+        </label>
+        <label>
+          <span class="field-label">Steuersatz GmbH (%)</span>
+          <input type="number" id="f-steuersatz" value="29.825" step="0.001">
+          <p class="hint">KSt 15 % + SolZ + GewSt (ca. 29,825 %)</p>
+        </label>
+      </div>
+      <button class="btn" onclick="calcFremdvergleich()">Prüfen</button>
+    </div>
+
+    <div class="result-box" id="res-fremdvergleich">
+      <div class="card-title">Prüfergebnis</div>
+      <div id="res-f-urteil" style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:1px;margin-bottom:20px;padding:12px 16px;border-left:3px solid var(--accent);background:var(--surface);"></div>
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="result-item-label">Tatsächliche Zinsen</div>
+          <div class="result-item-value" id="res-f-ist">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">Fremdübliche Zinsen</div>
+          <div class="result-item-value" id="res-f-soll">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">vGA-Betrag (brutto)</div>
+          <div class="result-item-value" id="res-f-vga">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">Steuerliche Mehrbelastung</div>
+          <div class="result-item-value" id="res-f-steuer">—</div>
+        </div>
+      </div>
+      <div class="note" id="res-f-hinweis"></div>
+    </div>
+  </div>
+
+  <p class="disclaimer">Alle Berechnungen sind Näherungswerte auf Basis der jeweils angegebenen Rechtsgrundlagen. Individuelle Faktoren bleiben unberücksichtigt. Kein Ersatz für individuelle Steuer- oder Rechtsberatung · Alle Angaben ohne Gewähr</p>
+
+</div>
+
+<footer>© Robin Glowania</footer>
+
+<script>
+/* ── Theme ─────────────────────────────────────────────────── */
+function setTheme(t) {
+  if (t === 'system') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', t);
+  }
+  try { localStorage.setItem('g-theme', t); } catch(e){}
+  document.querySelectorAll('.theme-btn').forEach(function(b){ b.classList.remove('active'); });
+  var btn = document.getElementById('btn-' + t);
+  if (btn) btn.classList.add('active');
+}
+(function(){
+  var saved = 'system';
+  try { saved = localStorage.getItem('g-theme') || 'system'; } catch(e){}
+  setTheme(saved);
+})();
+
+/* ── Hilfsfunktionen ───────────────────────────────────────── */
+const fmt = (v, decimals=2) =>
+  v.toLocaleString('de-DE', {minimumFractionDigits: decimals, maximumFractionDigits: decimals}) + ' €';
+const fmtPct = v =>
+  v.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 3}) + ' %';
+
+// Datum aus ISO-String
+function parseDate(s) {
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+// Tageszählung act/365
+function tageDiff(von, bis) {
+  return Math.round((bis - von) / 86400000);
+}
+
+// 30E/360 Tagezählung
+function tage30E360(d1, d2) {
+  let [y1,m1,t1] = [d1.getFullYear(), d1.getMonth()+1, d1.getDate()];
+  let [y2,m2,t2] = [d2.getFullYear(), d2.getMonth()+1, d2.getDate()];
+  if (t1 === 31) t1 = 30;
+  if (t2 === 31) t2 = 30;
+  return (y2-y1)*360 + (m2-m1)*30 + (t2-t1);
+}
+
+// act/360
+function tageAct360(d1, d2) { return tageDiff(d1, d2); }
+
+// Zinsen berechnen
+function zinsenBerechnen(kapital, satz, tage, methode, zinseszins, jahre) {
+  const r = satz / 100;
+  if (zinseszins && jahre > 0) {
+    // Jährliche Kapitalisierung mit Restlaufzeit
+    const vollJahre = Math.floor(jahre);
+    const restTage = tage - vollJahre * 365;
+    let kap = kapital * Math.pow(1 + r, vollJahre);
+    // Restperiode linear
+    kap += kap * r * (restTage / nenner(methode, null, null));
+    return kap - kapital;
+  }
+  return kapital * r * (tage / nenner(methode, null, null));
+}
+
+function nenner(methode) {
+  if (methode === '30E360' || methode === 'act360') return 360;
+  return 365;
+}
+
+function effektiveTage(von, bis, methode) {
+  if (methode === '30E360') return tage30E360(von, bis);
+  return tageDiff(von, bis);
+}
+
+/* ── Tab-Wechsel ───────────────────────────────────────────── */
+function switchTab(name) {
+  ['einfach','perioden','fremdvergleich'].forEach(t => {
+    document.getElementById('view-' + t).style.display = t === name ? '' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+  });
+}
+
+/* ── Einfache Berechnung ───────────────────────────────────── */
+// Vorbelegen: heute und in 1 Jahr
+(function() {
+  const h = new Date();
+  const j = new Date(h); j.setFullYear(j.getFullYear() + 1);
+  const iso = d => d.toISOString().slice(0,10);
+  document.getElementById('e-von').value = iso(h);
+  document.getElementById('e-bis').value = iso(j);
+})();
+
+function calcEinfach() {
+  const saldo    = parseFloat(document.getElementById('e-saldo').value) || 0;
+  const satz     = parseFloat(document.getElementById('e-zinssatz').value) || 0;
+  const vonStr   = document.getElementById('e-von').value;
+  const bisStr   = document.getElementById('e-bis').value;
+  const methode  = document.getElementById('e-methode').value;
+  const zinseszins = document.getElementById('e-zinseszins').checked;
+
+  if (!vonStr || !bisStr) return;
+  const von = parseDate(vonStr);
+  const bis = parseDate(bisStr);
+  if (bis <= von) { alert('Enddatum muss nach Startdatum liegen.'); return; }
+
+  const kalTage = tageDiff(von, bis);
+  const effTage = effektiveTage(von, bis, methode);
+  const jahre = kalTage / 365;
+
+  let zinsen;
+  if (zinseszins) {
+    const vollJahre = Math.floor(jahre);
+    let kap = saldo * Math.pow(1 + satz/100, vollJahre);
+    const restTage = effTage - vollJahre * nenner(methode);
+    if (restTage > 0) kap += kap * (satz/100) * (restTage / nenner(methode));
+    zinsen = kap - saldo;
+  } else {
+    zinsen = saldo * (satz/100) * (effTage / nenner(methode));
+  }
+
+  const endsaldo = saldo + zinsen;
+
+  document.getElementById('res-e-zinsen').textContent = fmt(zinsen);
+  document.getElementById('res-e-tage').textContent = kalTage + ' Tage';
+  document.getElementById('res-e-etage').textContent = effTage + ' Tage (' + methode + ')';
+  document.getElementById('res-e-rate').textContent = fmtPct(satz);
+  document.getElementById('res-e-endsaldo').textContent = fmt(endsaldo);
+
+  const methodeText = {
+    '30E360': '30E/360 (30 Tage/Monat, 360 Tage/Jahr)',
+    'act360': 'Actual/360',
+    'act365': 'Actual/365',
+    'actact': 'Actual/Actual'
+  }[methode];
+  document.getElementById('res-e-hinweis').textContent =
+    'Zinsmethode: ' + methodeText + (zinseszins ? ' · Mit Zinseszins (jährliche Kapitalisierung)' : ' · Einfache Verzinsung');
+
+  document.getElementById('res-einfach').style.display = 'block';
+}
+
+/* ── Perioden ──────────────────────────────────────────────── */
+function calcPerioden() {
+  const anfang   = parseFloat(document.getElementById('p-saldo').value) || 0;
+  const satz     = parseFloat(document.getElementById('p-zinssatz').value) || 0;
+  const startjahr = parseInt(document.getElementById('p-startjahr').value) || 2020;
+  const jahre    = parseInt(document.getElementById('p-jahre').value) || 1;
+  const aenderung = parseFloat(document.getElementById('p-aenderung').value) || 0;
+  const zinseszins = document.getElementById('p-zinseszins').checked;
+
+  let saldo = anfang;
+  let zinsGesamt = 0;
+  const tbody = document.getElementById('res-p-tbody');
+  tbody.innerHTML = '';
+
+  for (let i = 0; i < jahre; i++) {
+    const jahr = startjahr + i;
+    const saldoAnfang = saldo;
+    saldo += aenderung; // Änderung am Jahresanfang
+    const zinsbasis = saldo;
+    const zinsen = zinsbasis * (satz / 100);
+    if (zinseszins) saldo += zinsen;
+    zinsGesamt += zinsen;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="val">${jahr}</td>
+      <td>${fmt(saldoAnfang)}</td>
+      <td class="${aenderung >= 0 ? 'pos' : 'neg'}">${aenderung !== 0 ? fmt(aenderung) : '—'}</td>
+      <td>${fmt(zinsbasis)}</td>
+      <td class="pos">${fmt(zinsen)}</td>
+      <td class="val">${fmt(saldo)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById('res-p-gesamt').textContent = fmt(zinsGesamt);
+  document.getElementById('res-p-ende').textContent = fmt(saldo);
+  document.getElementById('res-perioden').style.display = 'block';
+}
+
+/* ── Fremdvergleich ────────────────────────────────────────── */
+function calcFremdvergleich() {
+  const saldo       = parseFloat(document.getElementById('f-saldo').value) || 0;
+  const vereinbart  = parseFloat(document.getElementById('f-vereinbart').value) || 0;
+  const fremd       = parseFloat(document.getElementById('f-fremd').value) || 0;
+  const steuersatz  = parseFloat(document.getElementById('f-steuersatz').value) || 29.825;
+  const jahr        = parseInt(document.getElementById('f-jahr').value) || 2024;
+
+  const zinsenIst   = saldo * (vereinbart / 100);
+  const zinsenSoll  = saldo * (fremd / 100);
+  const differenz   = zinsenSoll - zinsenIst;
+  const vga         = differenz > 0 ? differenz : 0;
+  const steuermehr  = vga * (steuersatz / 100);
+
+  const urteilEl = document.getElementById('res-f-urteil');
+  if (vga === 0) {
+    urteilEl.style.borderLeftColor = 'var(--accent)';
+    urteilEl.innerHTML = '<span style="color:var(--accent)">✓ Kein Risiko</span> — Der vereinbarte Zinssatz entspricht dem Fremdvergleich. Keine verdeckte Gewinnausschüttung.';
+  } else if (vereinbart === 0) {
+    urteilEl.style.borderLeftColor = '#c97070';
+    urteilEl.innerHTML = '<span style="color:#c97070">⚠ vGA-Risiko</span> — Unverzinstes Darlehen der GmbH an den Gesellschafter. Die Differenz zum fremdüblichen Zinssatz kann als vGA qualifiziert werden.';
+  } else {
+    urteilEl.style.borderLeftColor = '#c97070';
+    urteilEl.innerHTML = '<span style="color:#c97070">⚠ vGA-Risiko</span> — Der vereinbarte Zinssatz liegt unter dem fremdüblichen Satz. Die Zinsdifferenz kann als verdeckte Gewinnausschüttung i. S. d. § 8 Abs. 3 KStG qualifiziert werden.';
+  }
+
+  document.getElementById('res-f-ist').textContent = fmt(zinsenIst);
+  document.getElementById('res-f-soll').textContent = fmt(zinsenSoll);
+  document.getElementById('res-f-vga').textContent = vga > 0 ? fmt(vga) : '0,00 €';
+  document.getElementById('res-f-steuer').textContent = steuermehr > 0 ? fmt(steuermehr) : '0,00 €';
+
+  document.getElementById('res-f-hinweis').textContent =
+    'Geprüftes Jahr: ' + jahr +
+    ' · Fremdvergleichssatz: ' + fmtPct(fremd) +
+    ' · Steuersatz GmbH: ' + fmtPct(steuersatz) +
+    (vga > 0 ? ' · Die steuerliche Mehrbelastung umfasst KSt, SolZ und ggf. GewSt auf Ebene der GmbH. Auf Gesellschafterebene kann ggf. KapESt anfallen.' : '');
+
+  document.getElementById('res-fremdvergleich').style.display = 'block';
+}
+</script>
+</body>
+</html>
