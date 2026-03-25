@@ -255,6 +255,42 @@ tbody tr:hover td{background:var(--accent-dim);}
   background:#fff;top:3px;left:3px;transition:.2s;
 }
 .toggle input:checked + .toggle-slider::after{left:21px;}
+
+/* Zinshelfer */
+.zinshelfer{
+  margin-bottom:16px;
+  border:1px solid var(--border);
+  border-left:3px solid var(--accent-dim);
+}
+.zinshelfer-header{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;cursor:pointer;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);
+  background:var(--surface2);user-select:none;
+  transition:color .2s;
+}
+.zinshelfer-header:hover{color:var(--accent);}
+.zinshelfer-header svg{width:12px;height:12px;flex-shrink:0;transition:transform .2s;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;}
+.zinshelfer-header.open svg{transform:rotate(90deg);}
+.zinshelfer-body{
+  display:none;padding:16px;background:var(--surface);
+}
+.zinshelfer-body.open{display:block;}
+.zh-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.zh-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);white-space:nowrap;}
+.zh-input{width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;padding:7px 10px;outline:none;}
+.zh-input:focus{border-color:var(--accent);}
+.zh-plus{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--text-muted);}
+.zh-result{font-family:'Playfair Display',serif;font-size:20px;color:var(--accent);margin-left:auto;}
+.zh-btn{
+  padding:7px 16px;background:var(--accent);color:#fff;border:none;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;cursor:pointer;transition:opacity .2s;white-space:nowrap;
+}
+.zh-btn:hover{opacity:.85;}
+.zh-hint{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted);line-height:1.6;}
+.zh-stichtag{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-muted);opacity:.7;margin-top:6px;}
 .toggle-label{
   font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);cursor:pointer;
 }
@@ -290,7 +326,7 @@ tbody tr:hover td{background:var(--accent-dim);}
   <!-- Modus-Tabs -->
   <div class="tabs">
     <div class="tab active" id="tab-einfach" onclick="switchTab('einfach')">Einfache Berechnung</div>
-    <div class="tab" id="tab-perioden" onclick="switchTab('perioden')">Mehrere Perioden</div>
+    <div class="tab" id="tab-perioden" onclick="switchTab('perioden')">Kontokorrent</div>
     <div class="tab" id="tab-fremdvergleich" onclick="switchTab('fremdvergleich')">Fremdvergleich</div>
   </div>
 
@@ -301,14 +337,36 @@ tbody tr:hover td{background:var(--accent-dim);}
       <div class="grid2" style="margin-bottom:16px;">
         <label>
           <span class="field-label">Saldo Verrechnungskonto (€)</span>
-          <input type="number" id="e-saldo" value="50000" step="1000" min="0">
+          <input type="text" id="e-saldo" value="50.000" inputmode="decimal">
           <p class="hint">Positiv = Forderung der GmbH gegen Gesellschafter (Darlehen an GS)</p>
         </label>
-        <label>
+        <div>
+          <div class="zinshelfer" id="zh-einfach">
+            <div class="zinshelfer-header" onclick="toggleZH('einfach')">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              Zinshelfer · § 247 BGB Basiszinssatz
+            </div>
+            <div class="zinshelfer-body" id="zh-body-einfach">
+              <div class="zh-row">
+                <span class="zh-label">Basiszinssatz</span>
+                <input class="zh-input" type="text" id="zh-basis-einfach" value="1,27" inputmode="decimal">
+                <span class="zh-plus">+</span>
+                <span class="zh-label">Aufschlag</span>
+                <input class="zh-input" type="text" id="zh-aufschlag-einfach" value="2,00" inputmode="decimal">
+                <span class="zh-plus">=</span>
+                <span class="zh-result" id="zh-sum-einfach">3,27 %</span>
+                <button class="zh-btn" onclick="zhUebernehmen('einfach')">Übernehmen</button>
+              </div>
+              <div class="zh-hint">Basiszinssatz § 247 BGB gültig ab 01.01.2026 · Aufschlag für fehlendes Sicherungsrecht (+2–4 %) · BFH-Margenteilung: Mitte aus Haben- und Sollzins</div>
+              <div class="zh-stichtag">Stand: 01.01.2026 · Nächste Anpassung: 01.07.2026 · Quelle: Deutsche Bundesbank</div>
+            </div>
+          </div>
+          <label>
           <span class="field-label">Zinssatz (% p.a.)</span>
-          <input type="number" id="e-zinssatz" value="5.0" step="0.1" min="0" max="100">
+          <input type="text" id="e-zinssatz" value="3,5" inputmode="decimal">
           <p class="hint">Fremdüblicher Satz gem. Fremdvergleich</p>
-        </label>
+          </label>
+        </div>
       </div>
       <div class="grid3" style="margin-bottom:16px;">
         <label>
@@ -322,10 +380,8 @@ tbody tr:hover td{background:var(--accent-dim);}
         <label>
           <span class="field-label">Zinsmethode</span>
           <select id="e-methode">
-            <option value="30E360">30E/360 (kaufmännisch)</option>
-            <option value="act360">act/360</option>
-            <option value="act365" selected>act/365</option>
-            <option value="actact">act/act</option>
+            <option value="30E360" selected>30E/360 (kaufmännisch)</option>
+            <option value="act365">act/365</option>
           </select>
         </label>
       </div>
@@ -365,71 +421,138 @@ tbody tr:hover td{background:var(--accent-dim);}
     </div>
   </div>
 
-  <!-- ══ TAB: PERIODEN ════════════════════════════════════════ -->
+  <!-- ══ TAB: KONTOKORRENT-ZINSBLATT ═══════════════════════════ -->
   <div id="view-perioden" style="display:none;">
+
+    <!-- Stammdaten -->
     <div class="card">
-      <div class="card-title">Jahresweise Kontoentwicklung</div>
-      <div class="grid2" style="margin-bottom:16px;">
+      <div class="card-title">Stammdaten Geschäftsjahr</div>
+      <div class="grid3" style="margin-bottom:16px;">
         <label>
-          <span class="field-label">Anfangssaldo (€)</span>
-          <input type="number" id="p-saldo" value="50000" step="1000">
+          <span class="field-label">Gesellschaft</span>
+          <input type="text" id="kk-gesellschaft" placeholder="Muster GmbH" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:10px 14px;outline:none;">
         </label>
         <label>
-          <span class="field-label">Zinssatz (% p.a.)</span>
-          <input type="number" id="p-zinssatz" value="5.0" step="0.1" min="0">
+          <span class="field-label">Gesellschafter</span>
+          <input type="text" id="kk-gesellschafter" placeholder="Max Mustermann" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:10px 14px;outline:none;">
+        </label>
+        <label>
+          <span class="field-label">Geschäftsjahr</span>
+          <input type="number" id="kk-jahr" value="2025" min="2000" max="2040" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:10px 14px;outline:none;">
         </label>
       </div>
-      <div class="grid2" style="margin-bottom:16px;">
+      <div class="grid2">
         <label>
-          <span class="field-label">Startjahr</span>
-          <input type="number" id="p-startjahr" value="2020" step="1" min="2000" max="2040">
+          <span class="field-label">Anfangsbestand / Vortrag (€)</span>
+          <input type="text" id="kk-ab" value="0" inputmode="decimal" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:10px 14px;outline:none;">
+          <p class="hint">Positiv = Forderung GmbH gegen GS · Negativ = Verbindlichkeit GmbH an GS</p>
         </label>
-        <label>
-          <span class="field-label">Anzahl Jahre</span>
-          <input type="number" id="p-jahre" value="5" step="1" min="1" max="30">
-        </label>
+        <div>
+          <div class="zinshelfer" id="zh-perioden">
+            <div class="zinshelfer-header" onclick="toggleZH('perioden')">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              Zinshelfer · § 247 BGB Basiszinssatz
+            </div>
+            <div class="zinshelfer-body" id="zh-body-perioden">
+              <div class="zh-row">
+                <span class="zh-label">Basiszinssatz</span>
+                <input class="zh-input" type="text" id="zh-basis-perioden" value="1,27" inputmode="decimal">
+                <span class="zh-plus">+</span>
+                <span class="zh-label">Aufschlag</span>
+                <input class="zh-input" type="text" id="zh-aufschlag-perioden" value="2,00" inputmode="decimal">
+                <span class="zh-plus">=</span>
+                <span class="zh-result" id="zh-sum-perioden">3,27 %</span>
+                <button class="zh-btn" onclick="zhUebernehmen('perioden')">Übernehmen</button>
+              </div>
+              <div class="zh-hint">Basiszinssatz § 247 BGB gültig ab 01.01.2026 · Aufschlag für fehlendes Sicherungsrecht (+2–4 %)</div>
+              <div class="zh-stichtag">Stand: 01.01.2026 · Nächste Anpassung: 01.07.2026 · Quelle: Deutsche Bundesbank</div>
+            </div>
+          </div>
+          <label>
+            <span class="field-label">Zinssatz (% p.a.)</span>
+            <input type="text" id="p-zinssatz" value="3,5" inputmode="decimal" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:10px 14px;outline:none;">
+          </label>
+        </div>
       </div>
-      <label style="display:block;margin-bottom:16px;">
-        <span class="field-label">Jährliche Entnahme / Einlage (€, negativ = Entnahme)</span>
-        <input type="number" id="p-aenderung" value="0" step="1000">
-        <p class="hint">Betrag der am Jahresanfang auf das Verrechnungskonto gebucht wird (+ = Einlage, − = Entnahme)</p>
-      </label>
-      <div class="toggle-row">
-        <label class="toggle">
-          <input type="checkbox" id="p-zinseszins" checked>
-          <span class="toggle-slider"></span>
-        </label>
-        <span class="toggle-label" onclick="document.getElementById('p-zinseszins').click()">Zinseszins (Zinsen werden dem Konto gutgeschrieben)</span>
-      </div>
-      <button class="btn" onclick="calcPerioden()">Berechnen</button>
     </div>
 
-    <div class="result-box" id="res-perioden">
-      <div class="card-title">Periodenübersicht</div>
-      <div class="result-grid" style="margin-bottom:0;">
-        <div class="result-item">
-          <div class="result-item-label">Zinsen gesamt</div>
-          <div class="result-item-value accent" id="res-p-gesamt">—</div>
-        </div>
-        <div class="result-item">
-          <div class="result-item-label">Endsaldo</div>
-          <div class="result-item-value" id="res-p-ende">—</div>
-        </div>
-      </div>
-      <div class="tbl-wrap">
-        <table>
+    <!-- Buchungen -->
+    <div class="card">
+      <div class="card-title">Buchungen</div>
+      <div style="overflow-x:auto;margin-bottom:16px;">
+        <table id="kk-buchungen-tbl" style="width:100%;min-width:600px;">
           <thead>
             <tr>
-              <th>Jahr</th>
-              <th>Anfangssaldo</th>
-              <th>Änderung</th>
-              <th>Zinsbasis</th>
-              <th>Zinsen</th>
-              <th>Endsaldo</th>
+              <th style="width:130px;">Datum</th>
+              <th>Bezeichnung</th>
+              <th style="width:160px;text-align:right;">Betrag (€)</th>
+              <th style="width:40px;"></th>
             </tr>
           </thead>
-          <tbody id="res-p-tbody"></tbody>
+          <tbody id="kk-buchungen-body"></tbody>
         </table>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="kkAddRow()" style="width:auto;padding:10px 20px;flex:1;min-width:140px;">+ Buchung</button>
+        <button class="btn" onclick="kkImportExcel()" style="width:auto;padding:10px 20px;flex:1;min-width:140px;background:var(--surface2);color:var(--text);border:1px solid var(--border);">↑ Import Excel/CSV</button>
+        <input type="file" id="kk-import-file" accept=".xlsx,.csv" style="display:none" onchange="kkHandleImport(event)">
+      </div>
+    </div>
+
+    <!-- Berechnen -->
+    <button class="btn" onclick="calcKontokorrent()" style="margin-bottom:20px;">Zinsberechnung durchführen</button>
+
+    <!-- Ergebnis -->
+    <div id="res-perioden" style="display:none;">
+      <div style="background:var(--accent-dim);border:1px solid var(--accent);border-left:3px solid var(--accent);padding:24px 28px;margin-bottom:20px;">
+        <div class="card-title">Ergebnis</div>
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-item-label">Anfangsbestand</div>
+            <div class="result-item-value" id="res-kk-ab">—</div>
+          </div>
+          <div class="result-item">
+            <div class="result-item-label">Buchungen netto</div>
+            <div class="result-item-value" id="res-kk-buchungen">—</div>
+          </div>
+          <div class="result-item">
+            <div class="result-item-label">Zinsen gesamt</div>
+            <div class="result-item-value accent" id="res-kk-zinsen">—</div>
+          </div>
+          <div class="result-item">
+            <div class="result-item-label">Endbestand (EB)</div>
+            <div class="result-item-value accent" id="res-kk-eb">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zinsblatt-Tabelle -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+          <div class="card-title" style="margin-bottom:0;">Zinsblatt · 30E/360</div>
+          <div style="display:flex;gap:8px;">
+            <button class="zh-btn" onclick="kkExportExcel()" style="padding:8px 16px;">↓ Excel</button>
+            <button class="zh-btn" onclick="kkExportPDF()" style="padding:8px 16px;">↓ PDF</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table id="kk-zinsblatt-tbl">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Bezeichnung</th>
+                <th style="text-align:right;">Betrag</th>
+                <th style="text-align:right;">Saldo</th>
+                <th style="text-align:right;">Tage</th>
+                <th style="text-align:right;">Zinszahlen</th>
+                <th style="text-align:right;">Zinsen</th>
+              </tr>
+            </thead>
+            <tbody id="kk-zinsblatt-body"></tbody>
+            <tfoot id="kk-zinsblatt-foot"></tfoot>
+          </table>
+        </div>
+        <div class="note" id="res-kk-hinweis"></div>
       </div>
     </div>
   </div>
@@ -442,11 +565,11 @@ tbody tr:hover td{background:var(--accent-dim);}
       <div class="grid2" style="margin-bottom:16px;">
         <label>
           <span class="field-label">Saldo (€)</span>
-          <input type="number" id="f-saldo" value="100000" step="1000">
+          <input type="text" id="f-saldo" value="100.000" inputmode="decimal">
         </label>
         <label>
           <span class="field-label">Vereinbarter Zinssatz (% p.a.)</span>
-          <input type="number" id="f-vereinbart" value="0" step="0.1" min="0">
+          <input type="text" id="f-vereinbart" value="0" inputmode="decimal">
           <p class="hint">0 % = unverzinstes Darlehen</p>
         </label>
       </div>
@@ -455,14 +578,36 @@ tbody tr:hover td{background:var(--accent-dim);}
           <span class="field-label">Jahr der Prüfung</span>
           <input type="number" id="f-jahr" value="2024" step="1" min="2010" max="2030">
         </label>
-        <label>
+        <div>
+          <div class="zinshelfer" id="zh-fremd">
+            <div class="zinshelfer-header" onclick="toggleZH('fremd')">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              Zinshelfer · § 247 BGB Basiszinssatz
+            </div>
+            <div class="zinshelfer-body" id="zh-body-fremd">
+              <div class="zh-row">
+                <span class="zh-label">Basiszinssatz</span>
+                <input class="zh-input" type="text" id="zh-basis-fremd" value="1,27" inputmode="decimal">
+                <span class="zh-plus">+</span>
+                <span class="zh-label">Aufschlag</span>
+                <input class="zh-input" type="text" id="zh-aufschlag-fremd" value="2,00" inputmode="decimal">
+                <span class="zh-plus">=</span>
+                <span class="zh-result" id="zh-sum-fremd">3,27 %</span>
+                <button class="zh-btn" onclick="zhUebernehmen('fremd')">Übernehmen</button>
+              </div>
+              <div class="zh-hint">Basiszinssatz § 247 BGB gültig ab 01.01.2026 · Aufschlag für fehlendes Sicherungsrecht (+2–4 %)</div>
+              <div class="zh-stichtag">Stand: 01.01.2026 · Nächste Anpassung: 01.07.2026 · Quelle: Deutsche Bundesbank</div>
+            </div>
+          </div>
+          <label>
           <span class="field-label">Fremdvergleichssatz (% p.a.)</span>
-          <input type="number" id="f-fremd" value="5.0" step="0.1" min="0">
+          <input type="text" id="f-fremd" value="3,5" inputmode="decimal">
           <p class="hint">Banküblicher Zinssatz für vergleichbares Darlehen</p>
-        </label>
+          </label>
+        </div>
         <label>
           <span class="field-label">Steuersatz GmbH (%)</span>
-          <input type="number" id="f-steuersatz" value="29.825" step="0.001">
+          <input type="text" id="f-steuersatz" value="29,825" inputmode="decimal">
           <p class="hint">KSt 15 % + SolZ + GewSt (ca. 29,825 %)</p>
         </label>
       </div>
@@ -525,6 +670,60 @@ const fmt = (v, decimals=2) =>
 const fmtPct = v =>
   v.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 3}) + ' %';
 
+// Deutsche Zahlenformatierung für Eingabefelder
+function parseDe(s) {
+  if (typeof s !== 'string') s = String(s);
+  // Tausenderpunkte entfernen, Komma → Punkt
+  return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+}
+function fmtInput(v, decimals) {
+  if (isNaN(v) || v === null) return '';
+  if (decimals !== undefined) {
+    return v.toLocaleString('de-DE', {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
+  }
+  // Für Ganzzahlen: Tausender-Trenner ohne Dezimalstellen
+  if (Number.isInteger(v)) return v.toLocaleString('de-DE');
+  return v.toLocaleString('de-DE');
+}
+function setupNumberInput(id, decimals) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('focus', function() {
+    // Beim Fokus: nur Zahl ohne Tausenderpunkte zeigen (außer Dezimalkomma)
+    const v = parseDe(this.value);
+    if (!isNaN(v) && v !== 0) {
+      this.value = String(v).replace('.', ',');
+    } else if (v === 0) {
+      this.value = '0';
+    }
+    this.select();
+  });
+  el.addEventListener('blur', function() {
+    const v = parseDe(this.value);
+    if (!isNaN(v)) {
+      this.value = fmtInput(v, decimals);
+    }
+  });
+}
+// Alle Felder initialisieren
+document.addEventListener('DOMContentLoaded', function() {
+  ['e-saldo','f-saldo','kk-ab'].forEach(id => setupNumberInput(id, 0));
+  ['e-zinssatz','p-zinssatz','f-vereinbart','f-fremd'].forEach(id => setupNumberInput(id, 2));
+  setupNumberInput('f-steuersatz', 3);
+  // Initiale Formatierung Betragsfelder
+  ['e-saldo','f-saldo','kk-ab'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { const v = parseDe(el.value); el.value = fmtInput(v, 0); }
+  });
+  // Zinshelfer: Anzeige initialisieren + Zinssatz-Felder mit gerundetem Default befüllen
+  ['einfach','perioden','fremd'].forEach(function(name) {
+    const gerundet = zhCalc(name);
+    const targetId = name === 'einfach' ? 'e-zinssatz' : name === 'perioden' ? 'p-zinssatz' : 'f-fremd';
+    const el = document.getElementById(targetId);
+    if (el) el.value = gerundet.toLocaleString('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 2});
+  });
+});
+
 // Datum aus ISO-String
 function parseDate(s) {
   const [y,m,d] = s.split('-').map(Number);
@@ -581,6 +780,56 @@ function switchTab(name) {
   });
 }
 
+/* ── Zinshelfer ────────────────────────────────────────────── */
+function toggleZH(name) {
+  const header = document.querySelector('#zh-' + name + ' .zinshelfer-header');
+  const body = document.getElementById('zh-body-' + name);
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+function runde05(v) {
+  // Kaufmännisch auf 0,5 % runden: z.B. 3,27 → 3,5; 3,74 → 3,5; 3,75 → 4,0
+  return Math.round(v * 2) / 2;
+}
+
+function zhCalc(name) {
+  const basis = parseDe(document.getElementById('zh-basis-' + name).value) || 0;
+  const aufschlag = parseDe(document.getElementById('zh-aufschlag-' + name).value) || 0;
+  const sum = basis + aufschlag;
+  const gerundet = runde05(sum);
+  document.getElementById('zh-sum-' + name).textContent =
+    sum.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' %'
+    + ' → ' + gerundet.toLocaleString('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' %';
+  return gerundet;
+}
+
+function zhUebernehmen(name) {
+  const gerundet = zhCalc(name);
+  const targetId = name === 'einfach' ? 'e-zinssatz' : name === 'perioden' ? 'p-zinssatz' : 'f-fremd';
+  document.getElementById(targetId).value =
+    gerundet.toLocaleString('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 2});
+}
+
+// Live-Update bei Eingabe
+['einfach','perioden','fremd'].forEach(function(name) {
+  ['zh-basis-' + name, 'zh-aufschlag-' + name].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', function() { zhCalc(name); });
+    el.addEventListener('focus', function() {
+      const v = parseDe(this.value);
+      this.value = String(v).replace('.', ',');
+      this.select();
+    });
+    el.addEventListener('blur', function() {
+      const v = parseDe(this.value);
+      this.value = v.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      zhCalc(name);
+    });
+  });
+});
+
 /* ── Einfache Berechnung ───────────────────────────────────── */
 // Vorbelegen: heute und in 1 Jahr
 (function() {
@@ -592,8 +841,8 @@ function switchTab(name) {
 })();
 
 function calcEinfach() {
-  const saldo    = parseFloat(document.getElementById('e-saldo').value) || 0;
-  const satz     = parseFloat(document.getElementById('e-zinssatz').value) || 0;
+  const saldo    = parseDe(document.getElementById('e-saldo').value) || 0;
+  const satz     = parseDe(document.getElementById('e-zinssatz').value) || 0;
   const vonStr   = document.getElementById('e-von').value;
   const bisStr   = document.getElementById('e-bis').value;
   const methode  = document.getElementById('e-methode').value;
@@ -639,52 +888,402 @@ function calcEinfach() {
   document.getElementById('res-einfach').style.display = 'block';
 }
 
-/* ── Perioden ──────────────────────────────────────────────── */
-function calcPerioden() {
-  const anfang   = parseFloat(document.getElementById('p-saldo').value) || 0;
-  const satz     = parseFloat(document.getElementById('p-zinssatz').value) || 0;
-  const startjahr = parseInt(document.getElementById('p-startjahr').value) || 2020;
-  const jahre    = parseInt(document.getElementById('p-jahre').value) || 1;
-  const aenderung = parseFloat(document.getElementById('p-aenderung').value) || 0;
-  const zinseszins = document.getElementById('p-zinseszins').checked;
+/* ── Kontokorrent-Zinsblatt ────────────────────────────────── */
 
-  let saldo = anfang;
-  let zinsGesamt = 0;
-  const tbody = document.getElementById('res-p-tbody');
+// Buchungszeilen-State
+let kkRows = [];
+
+function kkRowId() { return Date.now() + Math.random(); }
+
+function kkAddRow(datum, bezeichnung, betrag) {
+  const id = kkRowId();
+  kkRows.push({ id, datum: datum||'', bezeichnung: bezeichnung||'', betrag: betrag||'' });
+  kkRenderRows();
+}
+
+function kkDeleteRow(id) {
+  kkRows = kkRows.filter(r => r.id !== id);
+  kkRenderRows();
+}
+
+function kkRenderRows() {
+  const tbody = document.getElementById('kk-buchungen-body');
   tbody.innerHTML = '';
-
-  for (let i = 0; i < jahre; i++) {
-    const jahr = startjahr + i;
-    const saldoAnfang = saldo;
-    saldo += aenderung; // Änderung am Jahresanfang
-    const zinsbasis = saldo;
-    const zinsen = zinsbasis * (satz / 100);
-    if (zinseszins) saldo += zinsen;
-    zinsGesamt += zinsen;
-
+  kkRows.forEach(function(row) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="val">${jahr}</td>
-      <td>${fmt(saldoAnfang)}</td>
-      <td class="${aenderung >= 0 ? 'pos' : 'neg'}">${aenderung !== 0 ? fmt(aenderung) : '—'}</td>
-      <td>${fmt(zinsbasis)}</td>
-      <td class="pos">${fmt(zinsen)}</td>
-      <td class="val">${fmt(saldo)}</td>
+      <td><input type="date" value="${row.datum}" onchange="kkUpdateRow(${row.id},'datum',this.value)"
+        style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px 8px;outline:none;width:130px;"></td>
+      <td><input type="text" value="${row.bezeichnung}" placeholder="Bezeichnung" onchange="kkUpdateRow(${row.id},'bezeichnung',this.value)" oninput="kkUpdateRow(${row.id},'bezeichnung',this.value)"
+        style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px 8px;outline:none;width:100%;"></td>
+      <td><input type="text" value="${row.betrag}" placeholder="z.B. -5.000" inputmode="decimal"
+        onchange="kkUpdateRow(${row.id},'betrag',this.value)"
+        onfocus="kkFocusBetrag(this)" onblur="kkBlurBetrag(this,${row.id})"
+        style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px 8px;outline:none;width:150px;text-align:right;"></td>
+      <td><button onclick="kkDeleteRow(${row.id})" style="background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:4px 8px;">×</button></td>
     `;
     tbody.appendChild(tr);
+  });
+}
+
+function kkUpdateRow(id, field, value) {
+  const row = kkRows.find(r => r.id === id);
+  if (row) row[field] = value;
+}
+
+function kkFocusBetrag(el) {
+  const v = parseDe(el.value);
+  el.value = isNaN(v) || v === 0 ? '' : String(v).replace('.', ',');
+  el.select();
+}
+
+function kkBlurBetrag(el, id) {
+  const v = parseDe(el.value);
+  el.value = isNaN(v) ? '' : v.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  kkUpdateRow(id, 'betrag', el.value);
+}
+
+// 30E/360: Tage zwischen d1 und d2
+function kk30E360(d1, d2) {
+  let [y1,m1,t1] = [d1.getFullYear(), d1.getMonth()+1, d1.getDate()];
+  let [y2,m2,t2] = [d2.getFullYear(), d2.getMonth()+1, d2.getDate()];
+  if (t1 === 31) t1 = 30;
+  if (t2 === 31) t2 = 30;
+  return (y2-y1)*360 + (m2-m1)*30 + (t2-t1);
+}
+
+function kkParseDate(s) {
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function calcKontokorrent() {
+  const jahr   = parseInt(document.getElementById('kk-jahr').value) || 2025;
+  const ab     = parseDe(document.getElementById('kk-ab').value) || 0;
+  const satz   = parseDe(document.getElementById('p-zinssatz').value) || 0;
+
+  // Anfangs- und Enddatum
+  const dStart = new Date(jahr, 0, 1);   // 01.01.
+  const dEnd   = new Date(jahr, 11, 31); // 31.12.
+
+  // Buchungen sammeln + validieren
+  const buchungen = [];
+  for (const row of kkRows) {
+    if (!row.datum) continue;
+    const d = kkParseDate(row.datum);
+    if (d.getFullYear() !== jahr) continue; // nur GJ-Buchungen
+    const b = parseDe(row.betrag);
+    if (isNaN(b) || b === 0) continue;
+    buchungen.push({ datum: d, bezeichnung: row.bezeichnung || '—', betrag: b });
   }
 
-  document.getElementById('res-p-gesamt').textContent = fmt(zinsGesamt);
-  document.getElementById('res-p-ende').textContent = fmt(saldo);
+  // Chronologisch sortieren
+  buchungen.sort((a, b) => a.datum - b.datum);
+
+  // Perioden aufbauen: Start 01.01., dann jede Buchung, dann 31.12.
+  const events = [
+    { datum: dStart, bezeichnung: 'Anfangsbestand (AB)', betrag: ab, isAB: true }
+  ];
+  buchungen.forEach(b => events.push(b));
+  // Abschlusstag (kein eigener Betrag, nur Zinsende)
+  events.push({ datum: dEnd, bezeichnung: 'Jahresabschluss (EB)', betrag: null, isEB: true });
+
+  // Zinsblatt berechnen
+  const rows = [];
+  let saldo = 0;
+  let zinsGesamt = 0;
+  let buchungenNetto = 0;
+
+  for (let i = 0; i < events.length; i++) {
+    const ev = events[i];
+    const prevSaldo = saldo;
+
+    // Saldo nach Buchung
+    if (ev.betrag !== null) saldo += ev.betrag;
+    if (!ev.isAB && !ev.isEB && ev.betrag !== null) buchungenNetto += ev.betrag;
+
+    // Zinsen für Periode vom aktuellen Datum bis zum nächsten Ereignis
+    const nextEv = events[i + 1];
+    let tage = 0, zinszahlen = 0, zinsen = 0;
+    if (nextEv) {
+      tage = kk30E360(ev.datum, nextEv.datum);
+      zinszahlen = saldo * tage;
+      zinsen = zinszahlen * (satz / 100) / 360;
+      zinsGesamt += zinsen;
+    }
+
+    rows.push({
+      datum: ev.datum,
+      bezeichnung: ev.bezeichnung,
+      betrag: ev.betrag,
+      saldo,
+      tage: nextEv ? tage : null,
+      zinszahlen: nextEv ? zinszahlen : null,
+      zinsen: nextEv ? zinsen : null,
+      isAB: ev.isAB,
+      isEB: ev.isEB
+    });
+  }
+
+  // EB = AB + Buchungen + Zinsen (Zinskapitalisierung 31.12.)
+  const eb = ab + buchungenNetto + zinsGesamt;
+
+  // Ergebnis-Summary
+  document.getElementById('res-kk-ab').textContent = fmt(ab);
+  document.getElementById('res-kk-buchungen').textContent = fmt(buchungenNetto);
+  document.getElementById('res-kk-zinsen').textContent = fmt(zinsGesamt);
+  document.getElementById('res-kk-eb').textContent = fmt(eb);
+
+  // Zinsblatt rendern
+  const tbody = document.getElementById('kk-zinsblatt-body');
+  tbody.innerHTML = '';
+  rows.forEach(function(r) {
+    const tr = document.createElement('tr');
+    const d = r.datum;
+    const datumStr = d.getDate().toString().padStart(2,'0') + '.' + (d.getMonth()+1).toString().padStart(2,'0') + '.' + d.getFullYear();
+    const betragStr = r.betrag !== null
+      ? `<td style="text-align:right;" class="${r.betrag >= 0 ? 'pos' : 'neg'}">${r.betrag.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`
+      : '<td></td>';
+    const tageStr = r.tage !== null ? `<td style="text-align:right;">${r.tage}</td>` : '<td></td>';
+    const zzStr   = r.zinszahlen !== null ? `<td style="text-align:right;">${r.zinszahlen.toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0})}</td>` : '<td></td>';
+    const zinsenStr = r.zinsen !== null ? `<td style="text-align:right;" class="pos">${r.zinsen.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>` : '<td></td>';
+    tr.innerHTML = `
+      <td class="val">${datumStr}</td>
+      <td>${r.bezeichnung}</td>
+      ${betragStr}
+      <td style="text-align:right;" class="val">${r.saldo.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      ${tageStr}${zzStr}${zinsenStr}
+    `;
+    if (r.isEB) tr.style.borderTop = '2px solid var(--accent)';
+    tbody.appendChild(tr);
+  });
+
+  // Fußzeile
+  const tfoot = document.getElementById('kk-zinsblatt-foot');
+  tfoot.innerHTML = `
+    <tr style="border-top:2px solid var(--accent);">
+      <td colspan="3" style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);padding-top:10px;">Summen</td>
+      <td style="text-align:right;font-family:'Playfair Display',serif;font-size:16px;color:var(--accent);padding-top:10px;">${eb.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td></td>
+      <td style="text-align:right;font-size:11px;color:var(--text-muted);padding-top:10px;">${rows.filter(r=>r.zinszahlen!==null).reduce((s,r)=>s+r.zinszahlen,0).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0})}</td>
+      <td style="text-align:right;font-family:'Playfair Display',serif;font-size:16px;color:var(--accent);padding-top:10px;">${zinsGesamt.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    </tr>
+  `;
+
+  document.getElementById('res-kk-hinweis').textContent =
+    `Zinsmethode: 30E/360 · Zinssatz: ${satz.toLocaleString('de-DE',{minimumFractionDigits:2})} % p.a. · Zinskapitalisierung: 31.12.${jahr}`;
+
   document.getElementById('res-perioden').style.display = 'block';
+
+  // Exportdaten speichern
+  window._kkExportData = { rows, eb, zinsGesamt, buchungenNetto, ab, satz, jahr,
+    gesellschaft: document.getElementById('kk-gesellschaft').value,
+    gesellschafter: document.getElementById('kk-gesellschafter').value };
 }
+
+/* ── Excel Export (SheetJS) ────────────────────────────────── */
+function kkExportExcel() {
+  if (!window._kkExportData) return;
+  const d = window._kkExportData;
+
+  // SheetJS dynamisch laden
+  if (!window.XLSX) {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = function() { _kkDoExcel(d); };
+    document.head.appendChild(s);
+  } else {
+    _kkDoExcel(d);
+  }
+}
+
+function _kkDoExcel(d) {
+  const wb = XLSX.utils.book_new();
+  const rows = [];
+
+  // Kopfzeilen
+  rows.push([`Verrechnungskonto-Zinsblatt ${d.jahr}`]);
+  rows.push([`Gesellschaft: ${d.gesellschaft || '—'}    Gesellschafter: ${d.gesellschafter || '—'}`]);
+  rows.push([`Zinssatz: ${d.satz.toLocaleString('de-DE',{minimumFractionDigits:2})} % p.a. · Methode: 30E/360`]);
+  rows.push([]);
+  rows.push(['Datum', 'Bezeichnung', 'Betrag (€)', 'Saldo (€)', 'Tage', 'Zinszahlen', 'Zinsen (€)']);
+
+  d.rows.forEach(function(r) {
+    const dt = r.datum.getDate().toString().padStart(2,'0') + '.' + (r.datum.getMonth()+1).toString().padStart(2,'0') + '.' + r.datum.getFullYear();
+    rows.push([
+      dt,
+      r.bezeichnung,
+      r.betrag !== null ? r.betrag : '',
+      r.saldo,
+      r.tage !== null ? r.tage : '',
+      r.zinszahlen !== null ? Math.round(r.zinszahlen) : '',
+      r.zinsen !== null ? Math.round(r.zinsen * 100) / 100 : ''
+    ]);
+  });
+
+  rows.push([]);
+  rows.push(['', '', '', 'EB (inkl. Zinsen)', '', '', Math.round(d.zinsGesamt * 100) / 100]);
+  rows.push(['', '', '', Math.round(d.eb * 100) / 100]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:12},{wch:35},{wch:14},{wch:14},{wch:7},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Zinsblatt');
+  XLSX.writeFile(wb, `Zinsblatt_${d.gesellschaft||'GmbH'}_${d.jahr}.xlsx`);
+}
+
+/* ── PDF Export (Print) ────────────────────────────────────── */
+function kkExportPDF() {
+  if (!window._kkExportData) return;
+  const d = window._kkExportData;
+
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Zinsblatt ${d.jahr}</title>
+  <style>
+    body{font-family:'Arial',sans-serif;font-size:10pt;margin:20mm;}
+    h2{font-size:14pt;margin-bottom:4px;}
+    .meta{font-size:9pt;color:#555;margin-bottom:16px;}
+    table{width:100%;border-collapse:collapse;font-size:9pt;}
+    th{background:#1a3a2a;color:#fff;padding:6px 8px;text-align:left;font-weight:normal;letter-spacing:1px;font-size:8pt;text-transform:uppercase;}
+    th.r,td.r{text-align:right;}
+    td{padding:5px 8px;border-bottom:1px solid #e0e8e4;}
+    tr.eb td{border-top:2px solid #2e7a50;font-weight:bold;}
+    tr.sum td{background:#f0f7f3;font-weight:bold;}
+    .pos{color:#2e7a50;} .neg{color:#c97070;}
+    .footer{margin-top:24px;font-size:8pt;color:#888;border-top:1px solid #ccc;padding-top:8px;}
+  </style></head><body>
+  <h2>Verrechnungskonto-Zinsblatt ${d.jahr}</h2>
+  <div class="meta">
+    Gesellschaft: <b>${d.gesellschaft||'—'}</b> &nbsp;|&nbsp;
+    Gesellschafter: <b>${d.gesellschafter||'—'}</b><br>
+    Zinssatz: <b>${d.satz.toLocaleString('de-DE',{minimumFractionDigits:2})} % p.a.</b> &nbsp;|&nbsp;
+    Methode: 30E/360 &nbsp;|&nbsp; Zinskapitalisierung: 31.12.${d.jahr}
+  </div>
+  <table>
+    <thead><tr>
+      <th>Datum</th><th>Bezeichnung</th><th class="r">Betrag (€)</th>
+      <th class="r">Saldo (€)</th><th class="r">Tage</th>
+      <th class="r">Zinszahlen</th><th class="r">Zinsen (€)</th>
+    </tr></thead><tbody>`;
+
+  d.rows.forEach(function(r) {
+    const dt = r.datum.getDate().toString().padStart(2,'0') + '.' + (r.datum.getMonth()+1).toString().padStart(2,'0') + '.' + r.datum.getFullYear();
+    const cls = r.isEB ? ' class="eb"' : '';
+    const betragHtml = r.betrag !== null
+      ? `<td class="r ${r.betrag>=0?'pos':'neg'}">${r.betrag.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`
+      : '<td></td>';
+    const tageHtml   = r.tage !== null ? `<td class="r">${r.tage}</td>` : '<td></td>';
+    const zzHtml     = r.zinszahlen !== null ? `<td class="r">${Math.round(r.zinszahlen).toLocaleString('de-DE')}</td>` : '<td></td>';
+    const zinsenHtml = r.zinsen !== null ? `<td class="r pos">${r.zinsen.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>` : '<td></td>';
+    html += `<tr${cls}><td>${dt}</td><td>${r.bezeichnung}</td>${betragHtml}
+      <td class="r">${r.saldo.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      ${tageHtml}${zzHtml}${zinsenHtml}</tr>`;
+  });
+
+  html += `</tbody><tfoot>
+    <tr class="sum">
+      <td colspan="3">Endbestand (EB) inkl. Zinskapitalisierung</td>
+      <td class="r">${d.eb.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td></td>
+      <td class="r">${d.rows.filter(r=>r.zinszahlen!==null).reduce((s,r)=>s+r.zinszahlen,0).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0})}</td>
+      <td class="r">${d.zinsGesamt.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    </tr>
+  </tfoot></table>
+  <div class="footer">Erstellt mit Verrechnungskonto-Rechner &nbsp;|&nbsp; Alle Angaben ohne Gewähr &nbsp;|&nbsp; © Robin Glowania</div>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(function(){ win.print(); }, 400);
+}
+
+/* ── Excel/CSV Import ──────────────────────────────────────── */
+function kkImportExcel() {
+  document.getElementById('kk-import-file').click();
+}
+
+function kkHandleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const name = file.name.toLowerCase();
+
+  if (name.endsWith('.csv')) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
+      let imported = 0;
+      lines.forEach(function(line) {
+        const cols = line.split(/[;,\t]/);
+        if (cols.length < 2) return;
+        const datum = cols[0].trim();
+        const bezeichnung = cols[1] ? cols[1].trim() : '';
+        const betrag = cols[2] ? cols[2].trim() : '';
+        // Datum erkennen: DD.MM.YYYY → YYYY-MM-DD
+        const dm = datum.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+        const datumIso = dm ? `${dm[3]}-${dm[2].padStart(2,'0')}-${dm[1].padStart(2,'0')}` : datum;
+        if (!datumIso.match(/^\d{4}-\d{2}-\d{2}$/)) return;
+        const b = parseDe(betrag);
+        kkAddRow(datumIso, bezeichnung, isNaN(b) ? '' : b.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}));
+        imported++;
+      });
+      alert(`${imported} Buchung(en) importiert.`);
+    };
+    reader.readAsText(file);
+  } else {
+    // XLSX via SheetJS
+    if (!window.XLSX) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = function() { _kkDoImportXlsx(file); };
+      document.head.appendChild(s);
+    } else {
+      _kkDoImportXlsx(file);
+    }
+  }
+  event.target.value = '';
+}
+
+function _kkDoImportXlsx(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const wb = XLSX.read(e.target.result, {type:'binary', cellDates:true});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+    let imported = 0;
+    data.forEach(function(row, i) {
+      if (i === 0) return; // Header überspringen
+      let datum = row[0], bezeichnung = String(row[1]||'').trim(), betrag = row[2];
+      // Datum: Date-Objekt oder String
+      if (datum instanceof Date) {
+        datum = datum.getFullYear() + '-' + String(datum.getMonth()+1).padStart(2,'0') + '-' + String(datum.getDate()).padStart(2,'0');
+      } else {
+        datum = String(datum||'').trim();
+        const dm = datum.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+        if (dm) datum = `${dm[3]}-${dm[2].padStart(2,'0')}-${dm[1].padStart(2,'0')}`;
+      }
+      if (!datum.match(/^\d{4}-\d{2}-\d{2}$/)) return;
+      const b = typeof betrag === 'number' ? betrag : parseDe(String(betrag));
+      if (isNaN(b) || b === 0) return;
+      kkAddRow(datum, bezeichnung, b.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}));
+      imported++;
+    });
+    alert(`${imported} Buchung(en) importiert.`);
+  };
+  reader.readAsBinaryString(file);
+}
+
+// Initial eine leere Buchungszeile
+document.addEventListener('DOMContentLoaded', function() {
+  kkAddRow('', '', '');
+});
 
 /* ── Fremdvergleich ────────────────────────────────────────── */
 function calcFremdvergleich() {
-  const saldo       = parseFloat(document.getElementById('f-saldo').value) || 0;
-  const vereinbart  = parseFloat(document.getElementById('f-vereinbart').value) || 0;
-  const fremd       = parseFloat(document.getElementById('f-fremd').value) || 0;
-  const steuersatz  = parseFloat(document.getElementById('f-steuersatz').value) || 29.825;
+  const saldo       = parseDe(document.getElementById('f-saldo').value) || 0;
+  const vereinbart  = parseDe(document.getElementById('f-vereinbart').value) || 0;
+  const fremd       = parseDe(document.getElementById('f-fremd').value) || 0;
+  const steuersatz  = parseDe(document.getElementById('f-steuersatz').value) || 29.825;
   const jahr        = parseInt(document.getElementById('f-jahr').value) || 2024;
 
   const zinsenIst   = saldo * (vereinbart / 100);
