@@ -320,13 +320,13 @@ tbody tr:hover td{background:var(--accent-dim);}
 
   <header style="text-align:center;margin-bottom:40px;">
     <h1><span>Verzinsung</span> Verrechnungskonto</h1>
-    <p class="subtitle">Gesellschafter-Darlehen · Fremdvergleich · vGA-Prüfung</p>
+    <p class="subtitle">Gesellschafter-Darlehen · Verrechnungskonto · Fremdvergleich</p>
   </header>
 
   <!-- Modus-Tabs -->
   <div class="tabs">
+    <div class="tab active" id="tab-perioden" onclick="switchTab('perioden')">Verrechnungskonto</div>
     <div class="tab" id="tab-einfach" onclick="switchTab('einfach')">Einfache Berechnung</div>
-    <div class="tab active" id="tab-perioden" onclick="switchTab('perioden')">Kontokorrent</div>
     <div class="tab" id="tab-fremdvergleich" onclick="switchTab('fremdvergleich')" style="display:none;">Fremdvergleich</div>
   </div>
 
@@ -445,7 +445,7 @@ tbody tr:hover td{background:var(--accent-dim);}
         <label>
           <span class="field-label">Vortrag (EB-Wert Vorjahr, €)</span>
           <input type="text" id="kk-ab" value="0" inputmode="decimal" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:10px 14px;outline:none;">
-          <p style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:8px;padding:8px 12px;background:var(--accent-dim);border-left:3px solid var(--accent);color:var(--text);line-height:1.6;"><span style="color:var(--accent);">+</span> Forderung GmbH gegen GS &nbsp;|&nbsp; <span style="color:#c97070;">−</span> Verbindlichkeit GmbH an GS</p>
+          <p style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:8px;padding:8px 12px;background:var(--accent-dim);border-left:3px solid var(--accent);color:var(--text);line-height:1.6;"><span style="color:var(--accent);">+</span> Verbindlichkeit (Geld von GmbH an Gesellschafter) <br><span style="color:#c97070;">−</span> Forderung (Geld von Gesellschafter an GmbH)</p>
         </label>
         <div>
           <label>
@@ -495,6 +495,8 @@ tbody tr:hover td{background:var(--accent-dim);}
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn" onclick="kkAddRowDefault()" style="width:auto;padding:10px 20px;flex:1;min-width:140px;">+ Buchung</button>
         <button class="btn" onclick="kkImportExcel()" style="width:auto;padding:10px 20px;flex:1;min-width:140px;background:var(--surface2);color:var(--text);border:1px solid var(--border);">↑ Import Excel/CSV</button>
+        <button class="btn" onclick="kkExportExcel()" style="width:auto;padding:10px 20px;flex:1;min-width:140px;background:var(--surface2);color:var(--text);border:1px solid var(--border);">↓ Export Excel</button>
+        <button class="btn" onclick="kkExportPDF()" style="width:auto;padding:10px 20px;flex:1;min-width:140px;background:var(--surface2);color:var(--text);border:1px solid var(--border);">↓ Export PDF</button>
         <input type="file" id="kk-import-file" accept=".xlsx,.csv" style="display:none" onchange="kkHandleImport(event)">
       </div>
     </div>
