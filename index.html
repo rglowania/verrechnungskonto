@@ -325,13 +325,13 @@ tbody tr:hover td{background:var(--accent-dim);}
 
   <!-- Modus-Tabs -->
   <div class="tabs">
-    <div class="tab active" id="tab-einfach" onclick="switchTab('einfach')">Einfache Berechnung</div>
-    <div class="tab" id="tab-perioden" onclick="switchTab('perioden')">Kontokorrent</div>
-    <div class="tab" id="tab-fremdvergleich" onclick="switchTab('fremdvergleich')">Fremdvergleich</div>
+    <div class="tab" id="tab-einfach" onclick="switchTab('einfach')">Einfache Berechnung</div>
+    <div class="tab active" id="tab-perioden" onclick="switchTab('perioden')">Kontokorrent</div>
+    <div class="tab" id="tab-fremdvergleich" onclick="switchTab('fremdvergleich')" style="display:none;">Fremdvergleich</div>
   </div>
 
   <!-- ══ TAB: EINFACH ══════════════════════════════════════════ -->
-  <div id="view-einfach">
+  <div id="view-einfach" style="display:none;">
     <div class="card">
       <div class="card-title">Kontostand & Verzinsung</div>
       <div class="grid2" style="margin-bottom:16px;">
@@ -422,7 +422,7 @@ tbody tr:hover td{background:var(--accent-dim);}
   </div>
 
   <!-- ══ TAB: KONTOKORRENT-ZINSBLATT ═══════════════════════════ -->
-  <div id="view-perioden" style="display:none;">
+  <div id="view-perioden">
 
     <!-- Stammdaten -->
     <div class="card">
@@ -441,14 +441,18 @@ tbody tr:hover td{background:var(--accent-dim);}
           <input type="number" id="kk-jahr" value="2025" min="2000" max="2040" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:10px 14px;outline:none;">
         </label>
       </div>
-      <div class="grid2">
+      <div class="grid2" style="margin-bottom:16px;align-items:start;">
         <label>
-          <span class="field-label">Anfangsbestand / Vortrag (€)</span>
+          <span class="field-label">Vortrag (EB-Wert Vorjahr, €)</span>
           <input type="text" id="kk-ab" value="0" inputmode="decimal" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:10px 14px;outline:none;">
-          <p class="hint">Positiv = Forderung GmbH gegen GS · Negativ = Verbindlichkeit GmbH an GS</p>
+          <p style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:8px;padding:8px 12px;background:var(--accent-dim);border-left:3px solid var(--accent);color:var(--text);line-height:1.6;"><span style="color:var(--accent);">+</span> Forderung GmbH gegen GS &nbsp;|&nbsp; <span style="color:#c97070;">−</span> Verbindlichkeit GmbH an GS</p>
         </label>
         <div>
-          <div class="zinshelfer" id="zh-perioden">
+          <label>
+            <span class="field-label">Zinssatz (% p.a.)</span>
+            <input type="text" id="p-zinssatz" value="3,5" inputmode="decimal" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:10px 14px;outline:none;">
+          </label>
+          <div class="zinshelfer" id="zh-perioden" style="margin-top:8px;">
             <div class="zinshelfer-header" onclick="toggleZH('perioden')">
               <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
               Zinshelfer · § 247 BGB Basiszinssatz
@@ -468,10 +472,6 @@ tbody tr:hover td{background:var(--accent-dim);}
               <div class="zh-stichtag">Stand: 01.01.2026 · Nächste Anpassung: 01.07.2026 · Quelle: Deutsche Bundesbank</div>
             </div>
           </div>
-          <label>
-            <span class="field-label">Zinssatz (% p.a.)</span>
-            <input type="text" id="p-zinssatz" value="3,5" inputmode="decimal" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:14px;padding:10px 14px;outline:none;">
-          </label>
         </div>
       </div>
     </div>
@@ -493,7 +493,7 @@ tbody tr:hover td{background:var(--accent-dim);}
         </table>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn" onclick="kkAddRow()" style="width:auto;padding:10px 20px;flex:1;min-width:140px;">+ Buchung</button>
+        <button class="btn" onclick="kkAddRowDefault()" style="width:auto;padding:10px 20px;flex:1;min-width:140px;">+ Buchung</button>
         <button class="btn" onclick="kkImportExcel()" style="width:auto;padding:10px 20px;flex:1;min-width:140px;background:var(--surface2);color:var(--text);border:1px solid var(--border);">↑ Import Excel/CSV</button>
         <input type="file" id="kk-import-file" accept=".xlsx,.csv" style="display:none" onchange="kkHandleImport(event)">
       </div>
@@ -508,7 +508,7 @@ tbody tr:hover td{background:var(--accent-dim);}
         <div class="card-title">Ergebnis</div>
         <div class="result-grid">
           <div class="result-item">
-            <div class="result-item-label">Anfangsbestand</div>
+            <div class="result-item-label">Vortrag</div>
             <div class="result-item-value" id="res-kk-ab">—</div>
           </div>
           <div class="result-item">
@@ -895,6 +895,11 @@ let kkRows = [];
 
 function kkRowId() { return Date.now() + Math.random(); }
 
+function kkAddRowDefault() {
+  const jahr = document.getElementById('kk-jahr').value || new Date().getFullYear();
+  kkAddRow(jahr + '-01-01', '', '');
+}
+
 function kkAddRow(datum, bezeichnung, betrag) {
   const id = kkRowId();
   kkRows.push({ id, datum: datum||'', bezeichnung: bezeichnung||'', betrag: betrag||'' });
@@ -982,11 +987,11 @@ function calcKontokorrent() {
 
   // Perioden aufbauen: Start 01.01., dann jede Buchung, dann 31.12.
   const events = [
-    { datum: dStart, bezeichnung: 'Anfangsbestand (AB)', betrag: ab, isAB: true }
+    { datum: dStart, bezeichnung: 'Vortrag (EB-Wert)', betrag: ab, isAB: true }
   ];
   buchungen.forEach(b => events.push(b));
   // Abschlusstag (kein eigener Betrag, nur Zinsende)
-  events.push({ datum: dEnd, bezeichnung: 'Jahresabschluss (EB)', betrag: null, isEB: true });
+  events.push({ datum: dEnd, bezeichnung: 'Saldo', betrag: null, isEB: true });
 
   // Zinsblatt berechnen
   const rows = [];
@@ -1273,9 +1278,13 @@ function _kkDoImportXlsx(file) {
   reader.readAsBinaryString(file);
 }
 
-// Initial eine leere Buchungszeile
+// Initial: aktuelles Jahr setzen + erste Buchungszeile mit 01.01.XXXX
 document.addEventListener('DOMContentLoaded', function() {
-  kkAddRow('', '', '');
+  const aktJahr = new Date().getFullYear();
+  const jahrEl = document.getElementById('kk-jahr');
+  if (jahrEl) jahrEl.value = aktJahr;
+  const defaultDatum = aktJahr + '-01-01';
+  kkAddRow(defaultDatum, '', '');
 });
 
 /* ── Fremdvergleich ────────────────────────────────────────── */
